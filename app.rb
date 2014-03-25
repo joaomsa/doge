@@ -21,18 +21,21 @@ module Doge
 
     caption = Magick::Draw.new
     caption.pointsize = 25
-    caption.fill = colors.sample
     caption.font = 'Comic-Sans-MS-Bold'
 
-    text = unless params['wow'].nil? then params['wow'] else phrases.sample end
-    text_metrics = caption.get_type_metrics(text)
+    texts = unless params['wow'].nil? then params['wow'].split(',') else [phrases.sample] end
 
-    caption.annotate(img, 
-                     text_metrics.width,
-                     text_metrics.height,
-                     Random.rand(0..(img.x_resolution.to_i - text_metrics.width)),
-                     Random.rand(0..(img.y_resolution.to_i - text_metrics.height)),
-                     text)
+    texts.each do |text|
+      text_metrics = caption.get_type_metrics(text)
+
+      caption.fill = colors.sample
+      caption.annotate(img, 
+                      text_metrics.width,
+                      text_metrics.height,
+                      Random.rand(0..(400 - text_metrics.width)),
+                      Random.rand(0..(400 - text_metrics.height)),
+                      text)
+    end
 
     content_type 'image/jpeg'
     img.format = 'JPEG'
