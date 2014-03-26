@@ -22,7 +22,8 @@ on %w{ ubuntu@doge.joaomsa.com } do |host|
     # Install Comic Sans Bold
     fonts_dir = '/usr/share/fonts/truetype/ms-fonts'
     execute :mkdir, '-p', fonts_dir
-    execute :sudo, :ln, '-nfs', 'comicbd.ttf', fonts_dir
+    execute :sudo, :ln, '-nfs', File.join(app_dir, 'comicbd.ttf'), 
+                                fonts_dir
     execute :'fc-cache', '-fv'
 
     # Nginx vhost
