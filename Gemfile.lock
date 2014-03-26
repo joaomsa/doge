@@ -1,6 +1,9 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    net-scp (1.1.2)
+      net-ssh (>= 2.6.5)
+    net-ssh (2.8.0)
     rack (1.5.2)
     rack-protection (1.5.2)
       rack
@@ -9,7 +12,14 @@ GEM
       rack (~> 1.4)
       rack-protection (~> 1.4)
       tilt (~> 1.3, >= 1.3.4)
+    sshkit (1.3.0)
+      net-scp (>= 1.1.2)
+      net-ssh
+      term-ansicolor
+    term-ansicolor (1.3.0)
+      tins (~> 1.0)
     tilt (1.4.1)
+    tins (1.0.1)
 
 PLATFORMS
   ruby
@@ -17,3 +27,4 @@ PLATFORMS
 DEPENDENCIES
   rmagick
   sinatra
+  sshkit
