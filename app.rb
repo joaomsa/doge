@@ -26,14 +26,22 @@ module Doge
     texts = unless params['wow'].nil? then params['wow'].split(',') else [phrases.sample] end
 
     texts.each do |text|
-      text_metrics = caption.get_type_metrics(text)
+      metrics = caption.get_multiline_type_metrics(text)
 
       caption.fill = colors.sample
+
+      min_x = 0
+      max_x = img.columns - metrics.width
+      x = Random.rand(min_x..max_x)
+
+      min_y = 0 + metrics.ascent
+      max_y = img.rows - metrics.height + metrics.ascent
+      y = Random.rand(min_y..max_y)
+
       caption.annotate(img, 
-                      text_metrics.width,
-                      text_metrics.height,
-                      Random.rand(0..(400 - text_metrics.width)),
-                      Random.rand(0..(400 - text_metrics.height)),
+                      metrics.width,
+                      metrics.height,
+                      x, y,
                       text)
     end
 
