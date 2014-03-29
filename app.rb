@@ -2,6 +2,18 @@ require 'sinatra/base'
 require 'RMagick'
 require 'pry'
 
+class Array
+  def sorted_insert(x)
+    pos = index {|e| yield(e, x) }
+    unless pos.nil? then
+      insert(pos, x)
+    else
+      push(x)
+    end
+    self
+  end
+end
+
 module Doge
   class Bounds
     attr_reader :min_x, :min_y, :max_x, :max_y 
@@ -49,63 +61,52 @@ module Doge
 
     texts = unless params['wow'].nil? then params['wow'].split(',') else [phrases.sample] end
 
-    bounds = Bounds.new(0, 0, img.columns, img.rows)
+    available_bounds = [Bounds.new(0, 0, 
+                                   img.columns, img.rows)]
 
     texts.each do |text|
       metrics = caption.get_multiline_type_metrics(text)
+
+      # Find first bounds that text can fit in
+      i = available_bounds.index do |b|
+        b.width >= metrics.width and b.height >= metrics.height
+      end
+      next if i.nil?
+      bounds = available_bounds.delete_at(i)
 
       min_x = bounds.min_x
       max_x = bounds.max_x - metrics.width
       x = Random.rand(min_x..max_x)
 
-      min_y = 0 + metrics.ascent
-      max_y = bounds.max_y - metrics.height + metrics.ascent
+      min_y = bounds.min_y
+      max_y = bounds.max_y - metrics.height
       y = Random.rand(min_y..max_y)
+
+      # Bounds to the left
+      rect = Bounds.new(bounds.min_x, bounds.min_y,
+                        x, img.rows)
+      available_bounds.sorted_insert(rect) {|b| b.area <= rect.area }
+
+      # Bounds above
+      rect = Bounds.new(bounds.min_x, bounds.min_y,
+                        bounds.max_x, y)
+      available_bounds.sorted_insert(rect) {|b| b.area <= rect.area }
+
+      # Bounds below
+      rect = Bounds.new(bounds.min_x, y + metrics.height,
+                        bounds.max_x, bounds.max_y)
+      available_bounds.sorted_insert(rect) {|b| b.area <= rect.area }
+      
+      # Bounds to the right
+      rect = Bounds.new(x + metrics.width, bounds.min_y,
+                        bounds.max_x, bounds.max_y)
+      available_bounds.sorted_insert(rect) {|b| b.area <= rect.area }
 
       caption.fill = colors.sample
       caption.annotate(img, 
-                      metrics.width,
-                      metrics.height,
-                      x, y,
+                      metrics.width, metrics.height,
+                      x, y + metrics.ascent,
                       text)
-
-      y = y - metrics.ascent
-
-      square_a = Magick::Draw.new
-      square_a.fill(colors[0])
-      square_a.fill_opacity(0.5)
-      square_a.rectangle(bounds.min_x,
-                         bounds.min_y,
-                         x,
-                         img.rows)
-      square_a.draw(img)
-
-      square_b = Magick::Draw.new
-      square_b.fill(colors[1])
-      square_b.fill_opacity(0.5)
-      square_b.rectangle(bounds.min_x,
-                         bounds.min_y,
-                         bounds.max_x,
-                         y)
-      square_b.draw(img)
-
-      square_c = Magick::Draw.new
-      square_c.fill(colors[2])
-      square_c.fill_opacity(0.5)
-      square_c.rectangle(0,
-                         y + metrics.height,
-                         bounds.max_x,
-                         bounds.max_y)
-      square_c.draw(img)
-      
-      square_d = Magick::Draw.new
-      square_d.fill(colors[3])
-      square_d.fill_opacity(0.5)
-      square_d.rectangle(x + metrics.width,
-                         0,
-                         bounds.max_x,
-                         bounds.max_y)
-      square_d.draw(img)
     end
 
     content_type 'image/jpeg'
