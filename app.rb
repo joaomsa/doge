@@ -3,6 +3,29 @@ require 'RMagick'
 require 'pry'
 
 module Doge
+  class Bounds
+    attr_reader :min_x, :min_y, :max_x, :max_y 
+
+    def initialize(min_x, min_y, max_x, max_y)
+      @min_x = min_x
+      @min_y = min_y
+      @max_x = max_x
+      @max_y = max_y
+    end
+
+    def width
+      @width ||=  @max_x - @min_x
+    end
+
+    def height
+      @height ||=  @max_y - @min_y
+    end
+
+    def area
+      @area ||= height * width
+    end
+  end
+
   class App < Sinatra::Base
 
   get '/' do
@@ -26,15 +49,17 @@ module Doge
 
     texts = unless params['wow'].nil? then params['wow'].split(',') else [phrases.sample] end
 
+    bounds = Bounds.new(0, 0, img.columns, img.rows)
+
     texts.each do |text|
       metrics = caption.get_multiline_type_metrics(text)
 
-      min_x = 0
-      max_x = img.columns - metrics.width
+      min_x = bounds.min_x
+      max_x = bounds.max_x - metrics.width
       x = Random.rand(min_x..max_x)
 
       min_y = 0 + metrics.ascent
-      max_y = img.rows - metrics.height + metrics.ascent
+      max_y = bounds.max_y - metrics.height + metrics.ascent
       y = Random.rand(min_y..max_y)
 
       caption.fill = colors.sample
@@ -49,8 +74,8 @@ module Doge
       square_a = Magick::Draw.new
       square_a.fill(colors[0])
       square_a.fill_opacity(0.5)
-      square_a.rectangle(0,
-                         0,
+      square_a.rectangle(bounds.min_x,
+                         bounds.min_y,
                          x,
                          img.rows)
       square_a.draw(img)
@@ -58,9 +83,9 @@ module Doge
       square_b = Magick::Draw.new
       square_b.fill(colors[1])
       square_b.fill_opacity(0.5)
-      square_b.rectangle(0,
-                         0,
-                         img.columns,
+      square_b.rectangle(bounds.min_x,
+                         bounds.min_y,
+                         bounds.max_x,
                          y)
       square_b.draw(img)
 
@@ -69,8 +94,8 @@ module Doge
       square_c.fill_opacity(0.5)
       square_c.rectangle(0,
                          y + metrics.height,
-                         img.columns,
-                         img.rows)
+                         bounds.max_x,
+                         bounds.max_y)
       square_c.draw(img)
       
       square_d = Magick::Draw.new
@@ -78,8 +103,8 @@ module Doge
       square_d.fill_opacity(0.5)
       square_d.rectangle(x + metrics.width,
                          0,
-                         img.columns,
-                         img.rows)
+                         bounds.max_x,
+                         bounds.max_y)
       square_d.draw(img)
     end
 
