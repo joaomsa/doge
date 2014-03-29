@@ -5,3 +5,4 @@ gem "sinatra"
 gem "rmagick"
 
 gem "sshkit"
+gem "pry"
