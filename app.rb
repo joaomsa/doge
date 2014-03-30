@@ -36,6 +36,27 @@ module Doge
     def area
       @area ||= height * width
     end
+
+    # Return array of bounds within that don't overlap with the bounds passed
+    def split(bounds)
+      split_bounds = []
+      # Bounds to the left
+      split_bounds << Bounds.new(@min_x, @min_y,
+                                 bounds.min_x, @max_y)
+      # Bounds above
+      split_bounds << Bounds.new(@min_x, @min_y,
+                                 @max_x, bounds.min_y)
+      # Bounds below
+      split_bounds << Bounds.new(@min_x, bounds.max_y,
+                                 @max_x, @max_y)
+      # Bounds to the right
+      split_bounds << Bounds.new(bounds.max_x, @min_y,
+                                 @max_x, @max_y)
+    end
+
+    def contains?(x, y)
+      @min_x <= x and x <= @max_x and @min_y <= y and y <= @max_y
+    end
   end
 
   class App < Sinatra::Base
@@ -82,25 +103,12 @@ module Doge
       max_y = bounds.max_y - metrics.height
       y = Random.rand(min_y..max_y)
 
-      # Bounds to the left
-      rect = Bounds.new(bounds.min_x, bounds.min_y,
-                        x, img.rows)
-      available_bounds.sorted_insert(rect) {|b| b.area <= rect.area }
+      text_bounds = Bounds.new(x, y,
+                               x + metrics.width, y + metrics.height)
 
-      # Bounds above
-      rect = Bounds.new(bounds.min_x, bounds.min_y,
-                        bounds.max_x, y)
-      available_bounds.sorted_insert(rect) {|b| b.area <= rect.area }
-
-      # Bounds below
-      rect = Bounds.new(bounds.min_x, y + metrics.height,
-                        bounds.max_x, bounds.max_y)
-      available_bounds.sorted_insert(rect) {|b| b.area <= rect.area }
-      
-      # Bounds to the right
-      rect = Bounds.new(x + metrics.width, bounds.min_y,
-                        bounds.max_x, bounds.max_y)
-      available_bounds.sorted_insert(rect) {|b| b.area <= rect.area }
+      bounds.split(text_bounds).each do |b|
+        available_bounds.sorted_insert(b) {|e| e.area <= b.area }
+      end
 
       caption.fill = colors.sample
       caption.annotate(img, 
