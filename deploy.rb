@@ -28,7 +28,7 @@ on %w{ ubuntu@doge.joaomsa.com } do |host|
 
     # Nginx vhost
     vhosts_dir = '/etc/nginx/sites-enabled'
-    execute :sudo, :ln, '-nfs', File.join(app_dir, 'nginx.vhost'), 
+    execute :sudo, :ln, '-nfs', File.join(app_dir, 'doge.nginxconf'), 
                                 File.join(vhosts_dir, app_name)
     execute :sudo, :service, 'nginx', 'reload'
 
