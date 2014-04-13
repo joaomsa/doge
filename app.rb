@@ -1,6 +1,7 @@
 require 'sinatra/base'
 require 'RMagick'
 require 'pry'
+require_relative 'lib/bounds'
 
 class Array
   def sorted_insert(x)
@@ -15,50 +16,6 @@ class Array
 end
 
 module Doge
-  class Bounds
-    attr_reader :min_x, :min_y, :max_x, :max_y 
-
-    def initialize(min_x, min_y, max_x, max_y)
-      @min_x = min_x
-      @min_y = min_y
-      @max_x = max_x
-      @max_y = max_y
-    end
-
-    def width
-      @width ||=  @max_x - @min_x
-    end
-
-    def height
-      @height ||=  @max_y - @min_y
-    end
-
-    def area
-      @area ||= height * width
-    end
-
-    # Return array of bounds within that don't overlap with the bounds passed
-    def split(bounds)
-      split_bounds = []
-      # Bounds to the left
-      split_bounds << Bounds.new(@min_x, @min_y,
-                                 bounds.min_x, @max_y)
-      # Bounds above
-      split_bounds << Bounds.new(@min_x, @min_y,
-                                 @max_x, bounds.min_y)
-      # Bounds below
-      split_bounds << Bounds.new(@min_x, bounds.max_y,
-                                 @max_x, @max_y)
-      # Bounds to the right
-      split_bounds << Bounds.new(bounds.max_x, @min_y,
-                                 @max_x, @max_y)
-    end
-
-    def contains?(x, y)
-      @min_x <= x and x <= @max_x and @min_y <= y and y <= @max_y
-    end
-  end
-
   class App < Sinatra::Base
 
   get '/' do
