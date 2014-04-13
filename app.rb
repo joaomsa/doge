@@ -34,7 +34,6 @@ module Doge
     colors = [ '#15fcf2', '#fc04f8', '#7f85ff', '#14f305', '#ea0f15']
 
     caption = Magick::Draw.new
-    caption.pointsize = 25
     caption.font = 'Comic-Sans-MS-Bold'
 
     texts = unless params['wow'].nil? then params['wow'].split(',') else [phrases.sample] end
@@ -43,6 +42,7 @@ module Doge
                                    img.columns, img.rows)]
 
     texts.each do |text|
+      caption.pointsize = Random.rand(20..25)
       metrics = caption.get_multiline_type_metrics(text)
 
       # Find first bounds that text can fit in
